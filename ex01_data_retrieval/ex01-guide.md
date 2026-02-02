@@ -89,14 +89,19 @@ Interface MinIO : http://localhost:9001
 ex01_data_retrieval/
 ├── build.sbt                 # Configuration SBT et dépendances
 ├── .jvmopts                  # Options JVM pour Java 11+
-├── run_ex01.sh              # Script d'exécution
+├── run_ex01.sh               # Script d'exécution de l'application
+├── run_tests.sh              # Script d'exécution des tests
 ├── data/
-│   └── raw/                 # Fichiers Parquet téléchargés
+│   └── raw/                  # Fichiers Parquet téléchargés
 └── src/
-    └── main/
+    ├── main/
+    │   └── scala/
+    │       └── fr/cytech/integration/
+    │           └── Main.scala        # Code principal
+    └── test/
         └── scala/
             └── fr/cytech/integration/
-                └── Main.scala    # Code principal
+                └── MainSpec.scala    # Tests unitaires
 ```
 
 ## Dépendances (build.sbt)
@@ -159,6 +164,154 @@ val spark = SparkSession.builder()
 cd ex01_data_retrieval
 JAVA_HOME=$(/usr/libexec/java_home -v 17) sbt run
 ```
+
+## Tests Unitaires
+
+### Objectif des Tests
+
+Les tests unitaires permettent de :
+- **Valider le bon fonctionnement** du code avant le déploiement
+- **Détecter les régressions** lors de modifications futures
+- **Documenter le comportement attendu** du code
+- **Faciliter la maintenance** en identifiant rapidement les problèmes
+
+### Framework de Test : ScalaTest
+
+Le projet utilise **ScalaTest** avec le style `FunSuite` et les matchers `should`. C'est le framework de test le plus populaire pour Scala.
+
+```scala
+// Exemple de test
+test("Doit pouvoir écrire et lire un fichier Parquet") {
+  val df = Seq((1, "NYC", 10.5)).toDF("id", "location", "fare")
+  df.write.mode("overwrite").parquet(testPath)
+
+  val loadedDf = spark.read.parquet(testPath)
+  loadedDf.count() shouldBe 1
+}
+```
+
+### Structure du Fichier de Test (MainSpec.scala)
+
+```
+MainSpec.scala
+├── Configuration
+│   ├── SparkSession (lazy val pour stabilité)
+│   ├── Répertoire temporaire pour les tests
+│   └── Setup/Teardown (beforeAll/afterAll)
+│
+├── Tests - Configuration Spark (2 tests)
+│   ├── Initialisation SparkSession
+│   └── Support des opérations SQL
+│
+├── Tests - Lecture/Écriture Parquet (2 tests)
+│   ├── Écriture et lecture d'un fichier
+│   └── Préservation du schéma
+│
+├── Tests - Schéma NYC Taxi (2 tests)
+│   ├── Création DataFrame avec schéma NYC
+│   └── Vérification des 19 colonnes
+│
+├── Tests - Validation des Données (3 tests)
+│   ├── Détection DataFrame vide
+│   ├── Filtrage des données invalides
+│   └── Calcul des statistiques
+│
+├── Tests - Gestion des Erreurs (2 tests)
+│   ├── Chemin de fichier invalide
+│   └── Gestion des valeurs nulles
+│
+└── Tests - Transformations (3 tests)
+    ├── Transformations de colonnes
+    ├── Groupement et agrégation
+    └── Calcul de durée de trajet
+```
+
+### Liste des 14 Tests
+
+| # | Test | Description |
+|---|------|-------------|
+| 1 | SparkSession initialisée | Vérifie que Spark démarre correctement |
+| 2 | Support SQL | Vérifie les opérations DataFrame de base |
+| 3 | Écriture/Lecture Parquet | Teste le cycle complet Parquet |
+| 4 | Préservation schéma | Vérifie que les types sont conservés |
+| 5 | Schéma NYC Taxi | Teste la création du schéma complet |
+| 6 | 19 colonnes | Vérifie le nombre de colonnes attendu |
+| 7 | DataFrame vide | Détecte les DataFrames sans données |
+| 8 | Filtrage invalides | Teste le filtrage des montants négatifs |
+| 9 | Statistiques | Vérifie count, sum, avg, min, max |
+| 10 | Chemin invalide | Gestion d'erreur fichier inexistant |
+| 11 | Valeurs nulles | Teste na.drop() et na.fill() |
+| 12 | Transformations | Teste withColumn et calculs |
+| 13 | Agrégation | Teste groupBy et agg |
+| 14 | Durée trajet | Calcul avec timestamps |
+
+### Exécution des Tests
+
+#### Méthode 1 : Script automatique (recommandé)
+```bash
+cd ex01_data_retrieval
+./run_tests.sh
+```
+
+Options disponibles :
+```bash
+./run_tests.sh              # Exécute tous les tests
+./run_tests.sh --verbose    # Mode détaillé
+./run_tests.sh --watch      # Relance à chaque modification
+./run_tests.sh --help       # Affiche l'aide
+```
+
+#### Méthode 2 : Commande SBT
+```bash
+cd ex01_data_retrieval
+JAVA_HOME=$(/usr/libexec/java_home -v 17) sbt test
+```
+
+Commandes SBT utiles :
+```bash
+sbt test                    # Exécute tous les tests
+sbt "testOnly *MainSpec"    # Exécute uniquement MainSpec
+sbt "~test"                 # Mode watch (relance automatique)
+sbt testQuick               # Relance les tests échoués
+```
+
+#### Méthode 3 : Depuis IntelliJ IDEA
+1. Clic droit sur `MainSpec.scala`
+2. Sélectionner **Run 'MainSpec'**
+3. Ou cliquer sur l'icône ▶️ verte à côté de chaque test
+
+### Résultat Attendu des Tests
+
+```
+[info] MainSpec:
+[info] - SparkSession doit être correctement initialisée
+[info] - SparkSession doit supporter les opérations SQL
+[info] - Doit pouvoir écrire et lire un fichier Parquet
+[info] - Le schéma Parquet doit être préservé après écriture/lecture
+[info] - Doit pouvoir créer un DataFrame avec le schéma NYC Taxi
+[info] - Le schéma NYC Taxi doit avoir 19 colonnes
+[info] - Doit rejeter un DataFrame vide lors de la validation
+[info] - Doit pouvoir filtrer les données invalides
+[info] - Doit calculer correctement les statistiques de base
+[info] - Doit gérer gracieusement un chemin invalide
+[info] - Doit gérer les valeurs nulles dans les données
+[info] - Doit pouvoir effectuer des transformations de colonnes
+[info] - Doit pouvoir grouper et agréger les données
+[info] - Doit pouvoir calculer la durée d'un trajet
+[info] Run completed in 4 seconds, 931 milliseconds.
+[info] Total number of tests run: 14
+[info] Suites: completed 1, aborted 0
+[info] Tests: succeeded 14, failed 0, canceled 0, ignored 0, pending 0
+[info] All tests passed.
+```
+
+### Bonnes Pratiques de Test
+
+1. **Isolation** : Chaque test est indépendant des autres
+2. **Nettoyage** : Les fichiers temporaires sont supprimés après les tests
+3. **Nommage** : Les noms de tests décrivent clairement le comportement attendu
+4. **Assertions** : Utilisation de matchers lisibles (`shouldBe`, `should contain`)
+5. **Setup partagé** : SparkSession unique pour tous les tests (performance)
 
 ## Résultat Attendu
 
@@ -234,3 +387,11 @@ EXERCICE 1 TERMINÉ AVEC SUCCÈS !
 ### Erreur : "Bucket does not exist"
 **Cause** : Le bucket `nyc-raw` n'existe pas
 **Solution** : Créer le bucket manuellement dans l'interface MinIO ou via mc (MinIO Client)
+
+### Erreur : "stable identifier required" dans les tests
+**Cause** : `spark` est déclaré comme `var` au lieu de `lazy val`
+**Solution** : Utiliser `lazy val spark: SparkSession = ...` pour garantir la stabilité
+
+### Erreur : Tests échouent avec "OutOfMemoryError"
+**Cause** : Mémoire JVM insuffisante
+**Solution** : Augmenter la mémoire dans `.jvmopts` avec `-Xmx4G`
