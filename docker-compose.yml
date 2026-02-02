@@ -17,7 +17,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 5s
-      timeout: 3scan yoju
+      timeout: 3s
       retries: 10
 
   spark-worker-1:
