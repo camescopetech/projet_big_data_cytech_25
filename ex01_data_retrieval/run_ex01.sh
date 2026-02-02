@@ -1,74 +1,151 @@
 #!/bin/bash
+# =============================================================================
+# run_ex01.sh - Script d'exécution pour l'Exercice 1
+# =============================================================================
+#
+# Description:
+#   Ce script automatise l'exécution de l'exercice 1 du projet Big Data.
+#   Il vérifie les prérequis (Docker, MinIO, SBT) avant de lancer l'application
+#   Spark qui télécharge et stocke les données NYC Taxi dans MinIO.
+#
+# Usage:
+#   ./run_ex01.sh
+#
+# Prérequis:
+#   - Docker Desktop en cours d'exécution
+#   - MinIO démarré via docker-compose
+#   - SBT (Scala Build Tool) installé
+#   - Java 8, 11 ou 17 installé
+#
+# Auteur: Équipe Big Data CY Tech
+# Version: 1.0.0
+# =============================================================================
 
-# Script d'exécution automatique pour l'exercice 1
-# Usage: ./run_ex01.sh
+set -e  # Exit on error
 
-# Force Java 17 (required for Spark 3.5.0)
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+# Force l'utilisation de Java 17 (requis pour Spark 3.5.0)
+# Java 21+ n'est pas compatible avec Spark à cause de javax.security.auth.Subject
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+
+# Codes couleur ANSI pour l'affichage
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m'  # No Color
+
+# =============================================================================
+# FONCTIONS UTILITAIRES
+# =============================================================================
+
+##
+# Affiche un message d'information
+# @param $1 Message à afficher
+##
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+##
+# Affiche un message de succès
+# @param $1 Message à afficher
+##
+log_success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+##
+# Affiche un message d'erreur et quitte
+# @param $1 Message d'erreur
+##
+log_error() {
+    echo -e "${RED}✗ $1${NC}" >&2
+    exit 1
+}
+
+##
+# Affiche un en-tête de section
+# @param $1 Numéro de l'étape
+# @param $2 Nombre total d'étapes
+# @param $3 Description de l'étape
+##
+print_step() {
+    echo -e "\n${YELLOW}[$1/$2]${NC} $3"
+}
+
+# =============================================================================
+# VÉRIFICATIONS DES PRÉREQUIS
+# =============================================================================
 
 echo "=========================================="
 echo "Exercice 1 : NYC Taxi Data → MinIO"
 echo "=========================================="
+echo "Java Home: $JAVA_HOME"
 
-# Couleurs pour l'affichage
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Vérifier que Docker est en cours d'exécution
-echo -e "\n${YELLOW}[1/5]${NC} Vérification de Docker..."
+# Étape 1: Vérification de Docker
+print_step 1 5 "Vérification de Docker..."
 if ! docker ps > /dev/null 2>&1; then
-    echo -e "${RED}✗ Docker n'est pas en cours d'exécution${NC}"
-    echo "Démarrez Docker et réessayez"
-    exit 1
+    log_error "Docker n'est pas en cours d'exécution. Démarrez Docker Desktop et réessayez."
 fi
-echo -e "${GREEN}✓${NC} Docker est actif"
+log_success "Docker est actif"
 
-# Vérifier que MinIO est en cours d'exécution
-echo -e "\n${YELLOW}[2/5]${NC} Vérification de MinIO..."
-if ! docker ps | grep minio > /dev/null; then
-    echo -e "${RED}✗ MinIO n'est pas en cours d'exécution${NC}"
-    echo "Lancez : docker-compose up -d"
-    exit 1
+# Étape 2: Vérification de MinIO
+print_step 2 5 "Vérification de MinIO..."
+if ! docker ps | grep -q minio; then
+    log_error "MinIO n'est pas en cours d'exécution. Lancez: docker-compose up -d"
 fi
-echo -e "${GREEN}✓${NC} MinIO est actif"
+log_success "MinIO est actif"
 
-# Créer le dossier data/raw s'il n'existe pas
-echo -e "\n${YELLOW}[3/5]${NC} Création du dossier data/raw..."
+# Étape 3: Création du répertoire de données
+print_step 3 5 "Création du dossier data/raw..."
 mkdir -p data/raw
-echo -e "${GREEN}✓${NC} Dossier créé"
+log_success "Dossier créé"
 
-# Vérifier que SBT est installé
-echo -e "\n${YELLOW}[4/5]${NC} Vérification de SBT..."
+# Étape 4: Vérification de SBT
+print_step 4 5 "Vérification de SBT..."
 if ! command -v sbt &> /dev/null; then
-    echo -e "${RED}✗ SBT n'est pas installé${NC}"
-    echo "Installez SBT : https://www.scala-sbt.org/download.html"
-    exit 1
+    log_error "SBT n'est pas installé. Installation: https://www.scala-sbt.org/download.html"
 fi
-echo -e "${GREEN}✓${NC} SBT est installé"
+log_success "SBT est installé ($(sbt --version 2>&1 | head -1))"
 
-# Exécuter le programme
-echo -e "\n${YELLOW}[5/5]${NC} Exécution du programme Spark..."
+# =============================================================================
+# EXÉCUTION DU PROGRAMME
+# =============================================================================
+
+print_step 5 5 "Exécution du programme Spark..."
 echo "=========================================="
+
 cd ex01_data_retrieval
 sbt "run"
+EXIT_CODE=$?
 
-# Vérifier le résultat
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "=========================================="
+# =============================================================================
+# RÉSULTAT
+# =============================================================================
+
+echo ""
+echo "=========================================="
+
+if [ $EXIT_CODE -eq 0 ]; then
     echo -e "${GREEN}✓ EXERCICE 1 TERMINÉ AVEC SUCCÈS !${NC}"
     echo "=========================================="
     echo ""
     echo "Prochaines étapes :"
-    echo "1. Vérifiez MinIO : http://localhost:9001"
-    echo "2. Bucket : nyc-raw"
-    echo "3. Passez à l'exercice 2"
+    echo "  1. Vérifiez MinIO        : http://localhost:9001"
+    echo "  2. Identifiants          : minio / minio123"
+    echo "  3. Bucket                : nyc-raw"
+    echo "  4. Passez à l'exercice 2"
 else
-    echo ""
-    echo "=========================================="
     echo -e "${RED}✗ Une erreur s'est produite${NC}"
     echo "=========================================="
+    echo ""
+    echo "Dépannage :"
+    echo "  - Vérifiez que MinIO est accessible: curl http://localhost:9000/minio/health/live"
+    echo "  - Consultez les logs: docker logs minio"
+    echo "  - Vérifiez Java: java -version (doit être 8, 11 ou 17)"
     exit 1
 fi
