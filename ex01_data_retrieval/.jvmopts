@@ -1,0 +1,56 @@
+# =============================================================================
+# JVM Options for Spark 3.5.0 with Java 11+
+# =============================================================================
+#
+# These options are required to run Apache Spark on Java 11, 17 or later.
+# Java 9+ introduced the module system (JPMS) which restricts reflective access
+# to internal JDK classes that Spark/Hadoop rely on.
+#
+# Without these options, you will encounter:
+#   - IllegalAccessError: class X cannot access class sun.nio.ch.DirectBuffer
+#   - InaccessibleObjectException: Unable to make field accessible
+#
+# @see https://spark.apache.org/docs/latest/
+# @see https://openjdk.org/jeps/261 (Module System)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Module Exports
+# Allow access to internal sun.nio.ch classes (required for Spark memory mgmt)
+# -----------------------------------------------------------------------------
+--add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+
+# -----------------------------------------------------------------------------
+# Module Opens (Reflective Access)
+# These open packages for deep reflection used by Spark, Hadoop, and Kryo
+# -----------------------------------------------------------------------------
+
+# Core Java classes
+--add-opens=java.base/java.lang=ALL-UNNAMED
+--add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+--add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+
+# I/O and networking
+--add-opens=java.base/java.io=ALL-UNNAMED
+--add-opens=java.base/java.net=ALL-UNNAMED
+--add-opens=java.base/java.nio=ALL-UNNAMED
+
+# Collections (used by Spark internal data structures)
+--add-opens=java.base/java.util=ALL-UNNAMED
+--add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+
+# NIO internals (required for off-heap memory operations)
+--add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+--add-opens=java.base/sun.nio.cs=ALL-UNNAMED
+
+# Security and calendar (used by Hadoop)
+--add-opens=java.base/sun.security.action=ALL-UNNAMED
+--add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+
+# -----------------------------------------------------------------------------
+# Memory Configuration
+# -----------------------------------------------------------------------------
+
+# Maximum heap size for the JVM (adjust based on available RAM)
+-Xmx2G
