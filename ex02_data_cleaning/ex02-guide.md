@@ -3,7 +3,7 @@
 
 ## Objectif
 
-L'exercice 2 consiste à créer un pipeline Spark avec **deux branches** :
+L'exercice 2 consiste à créer un pipeline Spark avec **deux branches** pour traiter **3 mois de données** (Juin-Août 2025) :
 
 1. **Branche 1** (ce dossier) : Nettoyage des données → MinIO
 2. **Branche 2** (après exercice 3) : Transformation → PostgreSQL
@@ -134,10 +134,15 @@ JAVA_HOME=$(/usr/libexec/java_home -v 17) sbt run
 ================================================================================
 EXERCICE 2 : Nettoyage des données NYC Taxi (Branche 1)
 ================================================================================
+Période : Juin - Août 2025 (3 mois)
+
+================================================================================
+Traitement du mois 06/2025
+================================================================================
 
 [Étape 1/6] Lecture des données brutes depuis MinIO...
   ✓ Fichier lu avec succès
-  - Nombre de lignes : 2,964,624
+  - Nombre de lignes : ~3,000,000
 
 [Étape 2/6] Analyse des données avant nettoyage...
   Statistiques des colonnes clés...
@@ -147,9 +152,9 @@ EXERCICE 2 : Nettoyage des données NYC Taxi (Branche 1)
 
 [Étape 4/6] Statistiques après nettoyage...
   Résumé du nettoyage :
-    - Lignes avant  : 2,964,624
-    - Lignes après  : ~2,800,000
-    - Lignes supprimées : ~164,000 (5-6%)
+    - Lignes avant  : ~3,000,000
+    - Lignes après  : ~2,850,000
+    - Lignes supprimées : ~150,000 (5-6%)
 
 [Étape 5/6] Écriture des données nettoyées vers MinIO...
   ✓ Données écrites avec succès
@@ -157,9 +162,28 @@ EXERCICE 2 : Nettoyage des données NYC Taxi (Branche 1)
 [Étape 6/6] Vérification des données...
   ✓ Vérification réussie
 
+✓ Mois 06/2025 traité avec succès
+
+================================================================================
+Traitement du mois 07/2025
+================================================================================
+[...même processus pour juillet...]
+
+================================================================================
+Traitement du mois 08/2025
+================================================================================
+[...même processus pour août...]
+
 ================================================================================
 EXERCICE 2 - BRANCHE 1 TERMINÉ AVEC SUCCÈS !
 ================================================================================
+
+Les données nettoyées sont disponibles dans MinIO :
+  Bucket : nyc-cleaned
+  Fichiers :
+    - yellow_tripdata_2025-06.parquet
+    - yellow_tripdata_2025-07.parquet
+    - yellow_tripdata_2025-08.parquet
 ```
 
 ## Tests Unitaires (14 tests)

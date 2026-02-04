@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 
 echo "=========================================="
 echo "Exercice 2 - Branche 2 : Tests Unitaires"
+echo "Ingestion vers PostgreSQL (Juin-Août 2025)"
 echo "=========================================="
 
 # Détection de Java 17

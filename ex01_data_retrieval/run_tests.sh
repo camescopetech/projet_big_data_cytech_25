@@ -81,6 +81,7 @@ check_prerequisites() {
 
 echo "=========================================="
 echo "Tests Unitaires - Exercice 1"
+echo "Collecte des données NYC Taxi (Juin-Août 2025)"
 echo "=========================================="
 echo "Java Home: $JAVA_HOME"
 echo ""

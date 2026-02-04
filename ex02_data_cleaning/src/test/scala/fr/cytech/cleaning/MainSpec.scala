@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 CY Tech - Big Data Project
+ * Copyright (c) 2025 CY Tech - Big Data Project
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +25,10 @@ import java.sql.Timestamp
  *   - Filtrage des passenger_count hors limites
  *   - Filtrage des montants négatifs
  *   - Filtrage des durées aberrantes
+ *   - Traitement de plusieurs mois (Juin-Août 2025)
  *
  * @author Équipe Big Data CY Tech
- * @version 1.0.0
+ * @version 1.1.0
  */
 class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
@@ -137,10 +138,10 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
   test("Doit filtrer les trajets avec pickup >= dropoff") {
     val df = Seq(
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:30:00")),  // Valide
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:00:00")),  // Invalide (égal)
-      (1, Timestamp.valueOf("2024-01-01 11:00:00"), Timestamp.valueOf("2024-01-01 10:00:00")),  // Invalide (inversé)
-      (1, Timestamp.valueOf("2024-01-01 08:00:00"), Timestamp.valueOf("2024-01-01 08:15:00"))   // Valide
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:30:00")),  // Valide
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:00:00")),  // Invalide (égal)
+      (1, Timestamp.valueOf("2025-06-15 11:00:00"), Timestamp.valueOf("2025-06-15 10:00:00")),  // Invalide (inversé)
+      (1, Timestamp.valueOf("2025-06-15 08:00:00"), Timestamp.valueOf("2025-06-15 08:15:00"))   // Valide
     ).toDF("VendorID", "tpep_pickup_datetime", "tpep_dropoff_datetime")
 
     val cleanedDf = df.filter(col("tpep_dropoff_datetime") > col("tpep_pickup_datetime"))
@@ -150,8 +151,8 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
   test("Doit calculer correctement la durée du trajet en minutes") {
     val df = Seq(
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:30:00")),
-      (1, Timestamp.valueOf("2024-01-01 11:00:00"), Timestamp.valueOf("2024-01-01 11:45:00"))
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:30:00")),
+      (1, Timestamp.valueOf("2025-06-15 11:00:00"), Timestamp.valueOf("2025-06-15 11:45:00"))
     ).toDF("VendorID", "tpep_pickup_datetime", "tpep_dropoff_datetime")
 
     val withDuration = df.withColumn(
@@ -167,10 +168,10 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
   test("Doit filtrer les durées aberrantes (< 1 min ou > 240 min)") {
     val df = Seq(
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:00:30")),  // 0.5 min - Invalide
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:05:00")),  // 5 min - Valide
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 14:00:00")),  // 240 min - Valide
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 15:00:00"))   // 300 min - Invalide
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:00:30")),  // 0.5 min - Invalide
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:05:00")),  // 5 min - Valide
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 14:00:00")),  // 240 min - Valide
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 15:00:00"))   // 300 min - Invalide
     ).toDF("VendorID", "tpep_pickup_datetime", "tpep_dropoff_datetime")
 
     val withDuration = df.withColumn(
@@ -235,25 +236,102 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   // ===========================================================================
+  // TESTS - TRAITEMENT MULTI-MOIS (Juin-Août 2025)
+  // ===========================================================================
+
+  test("Doit pouvoir traiter une liste de 3 mois") {
+    val year = "2025"
+    val months = List("06", "07", "08")
+
+    months.length shouldBe 3
+    months should contain allOf("06", "07", "08")
+
+    // Vérifier la génération des noms de fichiers
+    val fileNames = months.map(month => s"yellow_tripdata_${year}-${month}.parquet")
+
+    fileNames should contain allOf(
+      "yellow_tripdata_2025-06.parquet",
+      "yellow_tripdata_2025-07.parquet",
+      "yellow_tripdata_2025-08.parquet"
+    )
+  }
+
+  test("Doit pouvoir nettoyer et écrire plusieurs fichiers Parquet (simulation multi-mois)") {
+    val months = List("06", "07", "08")
+
+    // Simuler le nettoyage pour chaque mois
+    months.foreach { month =>
+      val testPath = s"$testDataDir/cleaned-$month"
+
+      // Créer des données simulées avec quelques invalides
+      val df = Seq(
+        (1, 2L, 5.0, 15.0, 20.0),   // Valide
+        (2, 1L, 10.0, 25.0, 30.0),  // Valide
+        (3, 0L, 5.0, 15.0, 20.0),   // Invalide (VendorID)
+        (1, 10L, 5.0, 15.0, 20.0)   // Invalide (passenger_count)
+      ).toDF("VendorID", "passenger_count", "trip_distance", "fare_amount", "total_amount")
+
+      // Appliquer les règles de nettoyage
+      val cleanedDf = df
+        .filter(col("VendorID").isin(1, 2))
+        .filter(col("passenger_count").between(1, 9))
+
+      cleanedDf.write.mode("overwrite").parquet(testPath)
+    }
+
+    // Vérifier que tous les fichiers peuvent être relus
+    var totalValidRows = 0L
+    months.foreach { month =>
+      val testPath = s"$testDataDir/cleaned-$month"
+      val loadedDf = spark.read.parquet(testPath)
+      totalValidRows += loadedDf.count()
+    }
+
+    totalValidRows shouldBe 6 // 2 lignes valides par mois × 3 mois
+  }
+
+  test("Doit pouvoir fusionner les données nettoyées de plusieurs mois") {
+    val months = List("06", "07", "08")
+
+    // Créer des DataFrames nettoyés pour chaque mois
+    val dataFrames = months.map { month =>
+      Seq(
+        (1, 2L, s"2025-$month-15", 15.0),
+        (2, 1L, s"2025-$month-20", 25.0)
+      ).toDF("VendorID", "passenger_count", "date", "fare")
+    }
+
+    // Fusionner tous les DataFrames
+    val mergedDf = dataFrames.reduce(_ union _)
+
+    mergedDf.count() shouldBe 6
+
+    // Vérifier que les 3 mois sont présents
+    val distinctDates = mergedDf.select("date").distinct().count()
+    distinctDates shouldBe 6 // 2 dates distinctes par mois
+  }
+
+  // ===========================================================================
   // TESTS - PIPELINE COMPLET
   // ===========================================================================
 
   test("Le pipeline complet doit nettoyer correctement les données") {
+    // Données de l'été 2025 (période couverte par l'exercice)
     val df = Seq(
-      // Ligne valide
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:30:00"),
+      // Ligne valide - Juin 2025
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:30:00"),
         2L, 5.0, 1L, "N", 100, 200, 1L, 15.0, 1.0, 0.5, 3.0, 0.0, 1.0, 20.5, 2.5, 0.0),
-      // VendorID invalide
-      (3, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:30:00"),
+      // VendorID invalide - Juillet 2025
+      (3, Timestamp.valueOf("2025-07-20 10:00:00"), Timestamp.valueOf("2025-07-20 10:30:00"),
         2L, 5.0, 1L, "N", 100, 200, 1L, 15.0, 1.0, 0.5, 3.0, 0.0, 1.0, 20.5, 2.5, 0.0),
-      // passenger_count invalide
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:30:00"),
+      // passenger_count invalide - Juillet 2025
+      (1, Timestamp.valueOf("2025-07-20 10:00:00"), Timestamp.valueOf("2025-07-20 10:30:00"),
         0L, 5.0, 1L, "N", 100, 200, 1L, 15.0, 1.0, 0.5, 3.0, 0.0, 1.0, 20.5, 2.5, 0.0),
-      // fare_amount négatif
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:30:00"),
+      // fare_amount négatif - Août 2025
+      (1, Timestamp.valueOf("2025-08-10 10:00:00"), Timestamp.valueOf("2025-08-10 10:30:00"),
         2L, 5.0, 1L, "N", 100, 200, 1L, -5.0, 1.0, 0.5, 3.0, 0.0, 1.0, 20.5, 2.5, 0.0),
-      // Autre ligne valide
-      (2, Timestamp.valueOf("2024-01-01 11:00:00"), Timestamp.valueOf("2024-01-01 11:45:00"),
+      // Autre ligne valide - Août 2025
+      (2, Timestamp.valueOf("2025-08-10 11:00:00"), Timestamp.valueOf("2025-08-10 11:45:00"),
         1L, 10.0, 2L, "N", 150, 250, 2L, 25.0, 0.0, 0.5, 0.0, 5.0, 1.0, 31.5, 2.5, 0.0)
     ).toDF(
       "VendorID", "tpep_pickup_datetime", "tpep_dropoff_datetime",

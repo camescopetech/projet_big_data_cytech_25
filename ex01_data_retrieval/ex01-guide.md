@@ -3,9 +3,9 @@
 ## Objectif
 
 L'objectif de cet exercice est de :
-1. Télécharger les données des taxis jaunes de New York (fichier Parquet)
-2. Stocker le fichier localement dans `data/raw/`
-3. Uploader le fichier vers MinIO (Data Lake)
+1. Télécharger les données des taxis jaunes de New York (fichiers Parquet) pour **3 mois** : Juin, Juillet et Août 2025
+2. Stocker les fichiers localement dans `data/raw/`
+3. Uploader les fichiers vers MinIO (Data Lake)
 
 ## Architecture
 
@@ -119,24 +119,33 @@ libraryDependencies ++= Seq(
 
 Le code effectue 3 étapes :
 
-### Étape 1 : Téléchargement
+### Configuration des mois à télécharger
 ```scala
-val nycUrl = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet"
-downloadFile(nycUrl, "data/raw/yellow_tripdata_2024-01.parquet")
+val year = "2025"
+val months = List("06", "07", "08") // Juin, Juillet, Août 2025
 ```
 
-### Étape 2 : Lecture avec Spark
+### Boucle de traitement pour chaque mois
 ```scala
-val df = spark.read.parquet(localRawPath)
-df.show(5)
-df.printSchema()
-```
+months.foreach { month =>
+  val fileName = s"yellow_tripdata_${year}-${month}.parquet"
+  val sourceUrl = s"$NycDataBaseUrl/$fileName"
+  val localRawPath = s"data/raw/$fileName"
+  val minioPath = s"s3a://$MinioBucket/$fileName"
 
-### Étape 3 : Upload vers MinIO
-```scala
-df.write
-  .mode("overwrite")
-  .parquet("s3a://nyc-raw/yellow_tripdata_2024-01.parquet")
+  // Étape 1 : Téléchargement
+  downloadFile(sourceUrl, localRawPath)
+
+  // Étape 2 : Lecture avec Spark
+  val df = spark.read.parquet(localRawPath)
+  df.show(5)
+  df.printSchema()
+
+  // Étape 3 : Upload vers MinIO
+  df.write
+    .mode("overwrite")
+    .parquet(minioPath)
+}
 ```
 
 ### Configuration Spark pour MinIO
@@ -320,22 +329,38 @@ sbt testQuick               # Relance les tests échoués
 EXERCICE 1 : Collecte et stockage des données NYC Taxi
 ================================================================================
 
-[Étape 1/3] Téléchargement du fichier depuis NYC...
-✓ Fichier téléchargé avec succès : data/raw/yellow_tripdata_2024-01.parquet
+================================================================================
+Traitement du mois 06/2025
+================================================================================
 
-[Étape 2/3] Lecture du fichier Parquet...
+[Étape 1/3] Téléchargement du fichier depuis NYC Open Data...
+✓ Fichier téléchargé avec succès : data/raw/yellow_tripdata_2025-06.parquet
+
+[Étape 2/3] Lecture du fichier Parquet avec Spark...
 ✓ Fichier lu avec succès
-  - Nombre de lignes : 2964624
+  - Nombre de lignes : ~3000000
   - Nombre de colonnes : 19
 
 [Étape 3/3] Upload vers MinIO...
-✓ Fichier uploadé avec succès vers MinIO : s3a://nyc-raw/yellow_tripdata_2024-01.parquet
+✓ Fichier uploadé avec succès vers MinIO : s3a://nyc-raw/yellow_tripdata_2025-06.parquet
 
 [Vérification] Lecture depuis MinIO...
-✓ Vérification réussie - 2964624 lignes lues depuis MinIO
+✓ Vérification réussie
+
+✓ Mois 06/2025 traité avec succès
 
 ================================================================================
-EXERCICE 1 TERMINÉ AVEC SUCCÈS !
+Traitement du mois 07/2025
+================================================================================
+[...même processus pour juillet...]
+
+================================================================================
+Traitement du mois 08/2025
+================================================================================
+[...même processus pour août...]
+
+================================================================================
+EXERCICE 1 TERMINÉ AVEC SUCCÈS - 3 mois collectés !
 ================================================================================
 ```
 
@@ -368,7 +393,10 @@ EXERCICE 1 TERMINÉ AVEC SUCCÈS !
 1. Accéder à http://localhost:9001
 2. Se connecter avec `minio` / `minio123`
 3. Naviguer vers le bucket `nyc-raw`
-4. Vérifier la présence du fichier `yellow_tripdata_2024-01.parquet`
+4. Vérifier la présence des 3 fichiers :
+   - `yellow_tripdata_2025-06.parquet` (Juin 2025)
+   - `yellow_tripdata_2025-07.parquet` (Juillet 2025)
+   - `yellow_tripdata_2025-08.parquet` (Août 2025)
 
 ## Problèmes Courants
 

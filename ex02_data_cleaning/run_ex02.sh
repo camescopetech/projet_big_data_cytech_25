@@ -63,6 +63,7 @@ print_step() {
 
 echo "=========================================="
 echo "Exercice 2 : Nettoyage des données"
+echo "Période : Juin - Août 2025 (3 mois)"
 echo "=========================================="
 echo "Java Home: $JAVA_HOME"
 
@@ -101,6 +102,10 @@ fi
 print_step 5 5 "Exécution du programme Spark..."
 echo "=========================================="
 
+# Se positionner dans le répertoire du script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 sbt "run"
 EXIT_CODE=$?
 
@@ -115,9 +120,12 @@ if [ $EXIT_CODE -eq 0 ]; then
     echo -e "${GREEN}✓ EXERCICE 2 - BRANCHE 1 TERMINÉ !${NC}"
     echo "=========================================="
     echo ""
-    echo "Résultat :"
-    echo "  - Données nettoyées dans MinIO : nyc-cleaned"
-    echo "  - Vérifiez sur http://localhost:9001"
+    echo "Fichiers nettoyés (bucket nyc-cleaned) :"
+    echo "  - yellow_tripdata_2025-06.parquet (Juin 2025)"
+    echo "  - yellow_tripdata_2025-07.parquet (Juillet 2025)"
+    echo "  - yellow_tripdata_2025-08.parquet (Août 2025)"
+    echo ""
+    echo "Vérifiez sur http://localhost:9001"
     echo ""
     echo "Prochaine étape :"
     echo "  - Exercice 3 : Création des tables SQL"

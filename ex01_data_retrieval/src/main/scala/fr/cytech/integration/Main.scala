@@ -82,20 +82,27 @@ object Main extends App {
 
   printHeader("EXERCICE 1 : Collecte et stockage des données NYC Taxi")
 
-  val year = "2024"
-  val month = "01"
-  val fileName = s"yellow_tripdata_${year}-${month}.parquet"
-  val sourceUrl = s"$NycDataBaseUrl/$fileName"
-  val localRawPath = s"data/raw/$fileName"
-  val minioPath = s"s3a://$MinioBucket/$fileName"
+  val year = "2025"
+  val months = List("06", "07", "08") // Juin, Juillet, Août 2025
 
   try {
-    executeStep1_Download(sourceUrl, localRawPath)
-    val df = executeStep2_ReadParquet(localRawPath)
-    executeStep3_UploadToMinio(df, minioPath)
-    verifyUpload(minioPath)
+    months.foreach { month =>
+      printHeader(s"Traitement du mois $month/$year")
 
-    printHeader("EXERCICE 1 TERMINÉ AVEC SUCCÈS !")
+      val fileName = s"yellow_tripdata_${year}-${month}.parquet"
+      val sourceUrl = s"$NycDataBaseUrl/$fileName"
+      val localRawPath = s"data/raw/$fileName"
+      val minioPath = s"s3a://$MinioBucket/$fileName"
+
+      executeStep1_Download(sourceUrl, localRawPath)
+      val df = executeStep2_ReadParquet(localRawPath)
+      executeStep3_UploadToMinio(df, minioPath)
+      verifyUpload(minioPath)
+
+      println(s"\n✓ Mois $month/$year traité avec succès")
+    }
+
+    printHeader("EXERCICE 1 TERMINÉ AVEC SUCCÈS - 3 mois collectés !")
 
   } catch {
     case e: Exception =>

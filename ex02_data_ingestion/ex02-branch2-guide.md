@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Insérer les données nettoyées depuis MinIO vers la table de faits `fact_trips` dans PostgreSQL, en respectant le modèle dimensionnel (snowflake schema) créé dans l'exercice 3.
+Insérer les données nettoyées depuis MinIO vers la table de faits `fact_trips` dans PostgreSQL pour **3 mois** (Juin-Août 2025), en respectant le modèle dimensionnel (snowflake schema) créé dans l'exercice 3.
 
 ## Architecture du Pipeline
 
@@ -98,18 +98,18 @@ JAVA_HOME=$(/usr/libexec/java_home -v 17) sbt test
 
 | Dimension | Format | Exemple |
 |-----------|--------|---------|
-| `date_id` | YYYYMMDD | 20240115 |
+| `date_id` | YYYYMMDD | 20250715 |
 | `time_id` | HHMM (arrondi 30 min) | 0830 |
 
 ### Exemple de Transformation
 
 ```
-Pickup: 2024-01-15 08:47:32
-  → pickup_date_id: 20240115
+Pickup: 2025-07-15 08:47:32
+  → pickup_date_id: 20250715
   → pickup_time_id: 830 (arrondi à 08:30)
 
-Dropoff: 2024-01-15 09:15:00
-  → dropoff_date_id: 20240115
+Dropoff: 2025-07-15 09:15:00
+  → dropoff_date_id: 20250715
   → dropoff_time_id: 900 (arrondi à 09:00)
 ```
 
@@ -144,6 +144,7 @@ Dropoff: 2024-01-15 09:15:00
 ```
 ==========================================
 Exercice 2 - Branche 2 : Ingestion PostgreSQL
+Période : Juin - Août 2025 (3 mois)
 ==========================================
 Java Home: /Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home
 
@@ -168,36 +169,61 @@ Java Home: /Library/Java/JavaVirtualMachines/openjdk-17.jdk/Contents/Home
 ================================================================================
 EXERCICE 2 - BRANCHE 2 : Ingestion vers PostgreSQL
 ================================================================================
+Période : Juin - Août 2025 (3 mois)
 
-[Étape 1/5] Lecture des données nettoyées depuis MinIO...
-  Source : s3a://nyc-cleaned/yellow_tripdata_2024-01.parquet
-  ✓ Fichier lu avec succès
-  - Nombre de lignes : 2,698,737
-
-[Étape 2/5] Transformation pour le modèle dimensionnel...
-  ✓ Colonnes transformées pour le modèle dimensionnel
-  - Clés dim_date calculées (format YYYYMMDD)
-  - Clés dim_time calculées (format HHMM, arrondi 30min)
-
-[Étape 3/5] Vérification des dimensions dans PostgreSQL...
+[Vérification] Dimensions dans PostgreSQL...
   - dim_vendor           : 2 lignes
   - dim_rate_code        : 6 lignes
   - dim_payment_type     : 6 lignes
-  - dim_location         : 234 lignes
-  - dim_date             : 366 lignes
+  - dim_location         : 178 lignes
+  - dim_date             : 365 lignes
   - dim_time             : 48 lignes
   ✓ Toutes les dimensions sont prêtes
 
-[Étape 4/5] Insertion des données dans fact_trips...
-  - Lignes à insérer : 2,698,737
-  ✓ 2,698,737 lignes insérées avec succès
+================================================================================
+Traitement du mois 06/2025
+================================================================================
 
-[Étape 5/5] Vérification de l'ingestion...
-  ✓ Table fact_trips : 2,698,737 lignes
+[Étape 1/5] Lecture des données nettoyées depuis MinIO...
+  Source : s3a://nyc-cleaned/yellow_tripdata_2025-06.parquet
+  ✓ Fichier lu avec succès
+  - Nombre de lignes : ~2,800,000
+
+[Étape 2/5] Transformation pour le modèle dimensionnel...
+  ✓ Colonnes transformées
+
+[Étape 3/5] Filtrage des données valides...
+  ✓ Filtrage terminé
+
+[Étape 4/5] Insertion des données dans fact_trips...
+  ✓ Lignes insérées avec succès
+
+✓ Mois 06/2025 ingéré avec succès
+
+================================================================================
+Traitement du mois 07/2025
+================================================================================
+[...même processus pour juillet...]
+
+================================================================================
+Traitement du mois 08/2025
+================================================================================
+[...même processus pour août...]
+
+[Vérification finale]
+  ✓ Table fact_trips : ~8,400,000 lignes (3 mois)
 
 ================================================================================
 EXERCICE 2 - BRANCHE 2 TERMINÉ AVEC SUCCÈS !
 ================================================================================
+
+Les données ont été insérées dans PostgreSQL :
+  Base de données : nyc_taxi_dw
+  Table : fact_trips
+  Mois traités :
+    - 06/2025
+    - 07/2025
+    - 08/2025
 ```
 
 ## Vérification

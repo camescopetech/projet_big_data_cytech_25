@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 
 echo "=========================================="
 echo "Exercice 2 - Branche 2 : Ingestion PostgreSQL"
+echo "Période : Juin - Août 2025 (3 mois)"
 echo "=========================================="
 
 # Détection de Java 17
@@ -109,6 +110,7 @@ echo ""
 echo "Résultat :"
 echo "  - Données insérées dans PostgreSQL"
 echo "  - Table : fact_trips"
+echo "  - Mois traités : Juin, Juillet, Août 2025"
 echo ""
 echo "Vérification :"
 echo "  docker exec postgres psql -U datawarehouse -d nyc_taxi_dw -c 'SELECT COUNT(*) FROM fact_trips;'"

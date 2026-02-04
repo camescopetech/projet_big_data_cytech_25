@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 CY Tech - Big Data Project
+ * Copyright (c) 2025 CY Tech - Big Data Project
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ import org.apache.spark.sql.types._
  * Exercice 2 - Branche 2 : Ingestion vers le Data Warehouse
  *
  * Cette application réalise :
- *   - Lecture des données nettoyées depuis MinIO (nyc-cleaned)
+ *   - Lecture des données nettoyées depuis MinIO (nyc-cleaned) pour 3 mois (Juin-Août 2025)
  *   - Transformation pour le modèle dimensionnel (snowflake schema)
  *   - Insertion dans la table de faits PostgreSQL (fact_trips)
  *
@@ -29,8 +29,8 @@ import org.apache.spark.sql.types._
  * @see [[https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page NYC TLC Data Dictionary]]
  *
  * @author Équipe Big Data CY Tech
- * @version 1.0.0
- * @since 2024-01
+ * @version 1.1.0
+ * @since 2025-01
  */
 object Main extends App {
 
@@ -54,8 +54,9 @@ object Main extends App {
   /** Buckets MinIO */
   private val CleanedBucket = "nyc-cleaned"
 
-  /** Fichier à traiter */
-  private val FileName = "yellow_tripdata_2024-01.parquet"
+  /** Configuration des mois à traiter (Juin-Août 2025) */
+  private val Year = "2025"
+  private val Months = List("06", "07", "08")
 
   // ===========================================================================
   // SPARK SESSION
@@ -82,32 +83,44 @@ object Main extends App {
   // ===========================================================================
 
   printHeader("EXERCICE 2 - BRANCHE 2 : Ingestion vers PostgreSQL")
-
-  val cleanedPath = s"s3a://$CleanedBucket/$FileName"
+  println(s"Période : Juin - Août $Year (3 mois)")
 
   try {
-    // Étape 1 : Lecture des données nettoyées depuis MinIO
-    val cleanedDf = readCleanedData(cleanedPath)
-
-    // Étape 2 : Transformation pour le modèle dimensionnel
-    val factDf = transformToFactTable(cleanedDf)
-
-    // Étape 3 : Vérification des dimensions dans PostgreSQL
+    // Vérification des dimensions une seule fois au début
     verifyDimensions()
 
-    // Étape 3b : Filtrage des locations valides
-    val validFactDf = filterValidLocations(factDf)
+    Months.foreach { month =>
+      val fileName = s"yellow_tripdata_${Year}-${month}.parquet"
+      val cleanedPath = s"s3a://$CleanedBucket/$fileName"
 
-    // Étape 4 : Insertion dans la table de faits
-    insertIntoFactTable(validFactDf)
+      printHeader(s"Traitement du mois $month/$Year")
 
-    // Étape 5 : Vérification finale
+      // Étape 1 : Lecture des données nettoyées depuis MinIO
+      val cleanedDf = readCleanedData(cleanedPath)
+
+      // Étape 2 : Transformation pour le modèle dimensionnel
+      val factDf = transformToFactTable(cleanedDf)
+
+      // Étape 3 : Filtrage des locations valides
+      val validFactDf = filterValidLocations(factDf)
+
+      // Étape 4 : Insertion dans la table de faits
+      insertIntoFactTable(validFactDf)
+
+      println(s"\n✓ Mois $month/$Year ingéré avec succès")
+    }
+
+    // Vérification finale
     verifyIngestion()
 
     printHeader("EXERCICE 2 - BRANCHE 2 TERMINÉ AVEC SUCCÈS !")
     println("\nLes données ont été insérées dans PostgreSQL :")
     println(s"  Base de données : $PgDatabase")
     println(s"  Table : fact_trips")
+    println("  Mois traités :")
+    Months.foreach { month =>
+      println(s"    - $month/$Year")
+    }
     println("\nProchaine étape : Exercice 4 (Visualisation)")
 
   } catch {
@@ -291,10 +304,10 @@ object Main extends App {
       col("dropoff_location_id").isin(validLocationIds.toSeq: _*)
     )
 
-    // Filtrer par dates valides (décembre 2023 - décembre 2024)
+    // Filtrer par dates valides (janvier 2025 - décembre 2025)
     filteredDf = filteredDf.filter(
-      col("pickup_date_id").between(20231201, 20241231) &&
-      col("dropoff_date_id").between(20231201, 20241231)
+      col("pickup_date_id").between(20250101, 20251231) &&
+      col("dropoff_date_id").between(20250101, 20251231)
     )
 
     val originalCount = df.count()

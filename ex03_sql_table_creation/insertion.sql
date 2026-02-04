@@ -329,7 +329,7 @@ ORDER BY time_id;
 
 -- =============================================================================
 -- DIMENSION: dim_date
--- Génération automatique pour l'année 2024 (données de janvier 2024)
+-- Génération automatique pour l'année 2025 (données de juin-août 2025)
 -- =============================================================================
 INSERT INTO dim_date (date_id, full_date, year, quarter, month, month_name, week_of_year, day_of_month, day_of_week, day_name, is_weekend, is_holiday)
 SELECT
@@ -345,11 +345,13 @@ SELECT
     TO_CHAR(d, 'Day') AS day_name,
     CASE WHEN EXTRACT(ISODOW FROM d) IN (6, 7) THEN TRUE ELSE FALSE END AS is_weekend,
     CASE
-        WHEN d = '2024-01-01' THEN TRUE  -- New Year's Day
-        WHEN d = '2024-01-15' THEN TRUE  -- MLK Day
+        WHEN d = '2025-01-01' THEN TRUE  -- New Year's Day
+        WHEN d = '2025-01-20' THEN TRUE  -- MLK Day
+        WHEN d = '2025-07-04' THEN TRUE  -- Independence Day
+        WHEN d = '2025-09-01' THEN TRUE  -- Labor Day
         ELSE FALSE
     END AS is_holiday
-FROM generate_series('2024-01-01'::date, '2024-12-31'::date, '1 day'::interval) AS d;
+FROM generate_series('2025-01-01'::date, '2025-12-31'::date, '1 day'::interval) AS d;
 
 -- =============================================================================
 -- VÉRIFICATION DES INSERTIONS

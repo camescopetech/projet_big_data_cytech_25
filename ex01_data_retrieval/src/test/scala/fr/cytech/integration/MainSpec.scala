@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 CY Tech - Big Data Project
+ * Copyright (c) 2025 CY Tech - Big Data Project
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,14 +34,15 @@ import scala.util.{Failure, Success, Try}
  *   - La configuration de la session Spark
  *   - La lecture et l'écriture de fichiers Parquet
  *   - La validation du schéma des données
+ *   - Le traitement de plusieurs mois de données (Juin-Août 2025)
  *   - La gestion des erreurs
  *
  * @note Les tests nécessitent un environnement Spark local
  * @note MinIO n'est pas requis pour les tests unitaires (mock local)
  *
  * @author Équipe Big Data CY Tech
- * @version 1.0.0
- * @since 2024-01
+ * @version 1.1.0
+ * @since 2025-01
  */
 class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
@@ -158,9 +159,9 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   test("Doit pouvoir créer un DataFrame avec le schéma NYC Taxi") {
     val testPath = s"$testDataDir/nyc-schema-test"
 
-    // Simuler le schéma NYC Taxi (colonnes principales)
+    // Simuler le schéma NYC Taxi (colonnes principales) - Données été 2025
     val nycTaxiDf = Seq(
-      (2, Timestamp.valueOf("2024-01-01 00:00:00"), Timestamp.valueOf("2024-01-01 00:15:00"),
+      (2, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:25:00"),
         1L, 2.5, 1L, "N", 100, 200, 1L, 15.0, 1.0, 0.5, 3.0, 0.0, 1.0, 20.5, 2.5, 0.0)
     ).toDF(
       "VendorID", "tpep_pickup_datetime", "tpep_dropoff_datetime",
@@ -196,6 +197,87 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
     )
 
     expectedColumns.length shouldBe 19
+  }
+
+  // ===========================================================================
+  // TESTS - TRAITEMENT MULTI-MOIS (Juin-Août 2025)
+  // ===========================================================================
+
+  test("Doit pouvoir traiter une liste de mois") {
+    val year = "2025"
+    val months = List("06", "07", "08")
+
+    months.length shouldBe 3
+    months should contain allOf("06", "07", "08")
+
+    // Vérifier la génération des noms de fichiers
+    val fileNames = months.map(month => s"yellow_tripdata_${year}-${month}.parquet")
+
+    fileNames should contain allOf(
+      "yellow_tripdata_2025-06.parquet",
+      "yellow_tripdata_2025-07.parquet",
+      "yellow_tripdata_2025-08.parquet"
+    )
+  }
+
+  test("Doit pouvoir écrire et lire plusieurs fichiers Parquet (simulation multi-mois)") {
+    val months = List("06", "07", "08")
+
+    // Simuler l'écriture de fichiers pour chaque mois
+    months.foreach { month =>
+      val testPath = s"$testDataDir/multi-month-$month"
+      val df = Seq(
+        (1, s"2025-$month", 10.0 + month.toInt),
+        (2, s"2025-$month", 20.0 + month.toInt)
+      ).toDF("trip_id", "month", "fare")
+
+      df.write.mode("overwrite").parquet(testPath)
+    }
+
+    // Vérifier que tous les fichiers peuvent être relus
+    var totalRows = 0L
+    months.foreach { month =>
+      val testPath = s"$testDataDir/multi-month-$month"
+      val loadedDf = spark.read.parquet(testPath)
+      totalRows += loadedDf.count()
+    }
+
+    totalRows shouldBe 6 // 2 lignes par mois × 3 mois
+  }
+
+  test("Doit pouvoir fusionner les données de plusieurs mois") {
+    val months = List("06", "07", "08")
+
+    // Créer des DataFrames pour chaque mois
+    val dataFrames = months.map { month =>
+      Seq(
+        (1, s"2025-$month-15", 15.0),
+        (2, s"2025-$month-20", 25.0)
+      ).toDF("trip_id", "date", "fare")
+    }
+
+    // Fusionner tous les DataFrames
+    val mergedDf = dataFrames.reduce(_ union _)
+
+    mergedDf.count() shouldBe 6
+
+    // Vérifier que les 3 mois sont présents
+    val distinctMonths = mergedDf.select("date").distinct().count()
+    distinctMonths shouldBe 6 // 2 dates distinctes par mois
+  }
+
+  test("Doit générer les URLs correctes pour chaque mois") {
+    val baseUrl = "https://d37ci6vzurychx.cloudfront.net/trip-data"
+    val year = "2025"
+    val months = List("06", "07", "08")
+
+    val urls = months.map { month =>
+      s"$baseUrl/yellow_tripdata_${year}-${month}.parquet"
+    }
+
+    urls(0) shouldBe "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-06.parquet"
+    urls(1) shouldBe "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-07.parquet"
+    urls(2) shouldBe "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-08.parquet"
   }
 
   // ===========================================================================
@@ -324,9 +406,11 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
   }
 
   test("Doit pouvoir calculer la durée d'un trajet") {
+    // Données de l'été 2025 (période couverte par l'exercice)
     val df = Seq(
-      (1, Timestamp.valueOf("2024-01-01 10:00:00"), Timestamp.valueOf("2024-01-01 10:30:00")),
-      (2, Timestamp.valueOf("2024-01-01 11:00:00"), Timestamp.valueOf("2024-01-01 11:45:00"))
+      (1, Timestamp.valueOf("2025-06-15 10:00:00"), Timestamp.valueOf("2025-06-15 10:30:00")),
+      (2, Timestamp.valueOf("2025-07-20 11:00:00"), Timestamp.valueOf("2025-07-20 11:45:00")),
+      (3, Timestamp.valueOf("2025-08-10 14:00:00"), Timestamp.valueOf("2025-08-10 14:20:00"))
     ).toDF("id", "pickup", "dropoff")
 
     val withDuration = df.withColumn(
@@ -338,6 +422,7 @@ class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 
     results(0).getAs[Long]("duration_minutes") shouldBe 30
     results(1).getAs[Long]("duration_minutes") shouldBe 45
+    results(2).getAs[Long]("duration_minutes") shouldBe 20
   }
 
   // ===========================================================================

@@ -83,6 +83,7 @@ print_step() {
 
 echo "=========================================="
 echo "Exercice 1 : NYC Taxi Data → MinIO"
+echo "Période : Juin - Août 2025 (3 mois)"
 echo "=========================================="
 echo "Java Home: $JAVA_HOME"
 
@@ -119,7 +120,10 @@ log_success "SBT est installé ($(sbt --version 2>&1 | head -1))"
 print_step 5 5 "Exécution du programme Spark..."
 echo "=========================================="
 
-cd ex01_data_retrieval
+# Se positionner dans le répertoire du script (ex01_data_retrieval)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 sbt "run"
 EXIT_CODE=$?
 
@@ -133,6 +137,11 @@ echo "=========================================="
 if [ $EXIT_CODE -eq 0 ]; then
     echo -e "${GREEN}✓ EXERCICE 1 TERMINÉ AVEC SUCCÈS !${NC}"
     echo "=========================================="
+    echo ""
+    echo "Fichiers collectés :"
+    echo "  - yellow_tripdata_2025-06.parquet (Juin 2025)"
+    echo "  - yellow_tripdata_2025-07.parquet (Juillet 2025)"
+    echo "  - yellow_tripdata_2025-08.parquet (Août 2025)"
     echo ""
     echo "Prochaines étapes :"
     echo "  1. Vérifiez MinIO        : http://localhost:9001"

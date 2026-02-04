@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 CY Tech - Big Data Project
+ * Copyright (c) 2025 CY Tech - Big Data Project
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ import org.apache.spark.sql.types._
  * Exercice 2 - Branche 1 : Nettoyage et validation des données
  *
  * Cette application réalise :
- *   - Lecture des données brutes depuis MinIO (nyc-raw)
+ *   - Lecture des données brutes depuis MinIO (nyc-raw) pour 3 mois (Juin-Août 2025)
  *   - Validation selon le contrat de données NYC TLC
  *   - Nettoyage et filtrage des données invalides
  *   - Écriture des données nettoyées vers MinIO (nyc-cleaned)
@@ -30,8 +30,8 @@ import org.apache.spark.sql.types._
  * @see [[https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page NYC TLC Data Dictionary]]
  *
  * @author Équipe Big Data CY Tech
- * @version 1.0.0
- * @since 2024-01
+ * @version 1.1.0
+ * @since 2025-01
  */
 object Main extends App {
 
@@ -48,8 +48,9 @@ object Main extends App {
   private val RawBucket = "nyc-raw"
   private val CleanedBucket = "nyc-cleaned"
 
-  /** Fichier à traiter */
-  private val FileName = "yellow_tripdata_2024-01.parquet"
+  /** Configuration des mois à traiter (Juin-Août 2025) */
+  private val Year = "2025"
+  private val Months = List("06", "07", "08")
 
   // ===========================================================================
   // SPARK SESSION
@@ -76,33 +77,44 @@ object Main extends App {
   // ===========================================================================
 
   printHeader("EXERCICE 2 : Nettoyage des données NYC Taxi (Branche 1)")
-
-  val rawPath = s"s3a://$RawBucket/$FileName"
-  val cleanedPath = s"s3a://$CleanedBucket/$FileName"
+  println(s"Période : Juin - Août $Year (3 mois)")
 
   try {
-    // Étape 1 : Lecture des données brutes
-    val rawDf = readRawData(rawPath)
+    Months.foreach { month =>
+      val fileName = s"yellow_tripdata_${Year}-${month}.parquet"
+      val rawPath = s"s3a://$RawBucket/$fileName"
+      val cleanedPath = s"s3a://$CleanedBucket/$fileName"
 
-    // Étape 2 : Afficher les statistiques avant nettoyage
-    displayPreCleaningStats(rawDf)
+      printHeader(s"Traitement du mois $month/$Year")
 
-    // Étape 3 : Nettoyage des données
-    val cleanedDf = cleanData(rawDf)
+      // Étape 1 : Lecture des données brutes
+      val rawDf = readRawData(rawPath)
 
-    // Étape 4 : Afficher les statistiques après nettoyage
-    displayPostCleaningStats(rawDf, cleanedDf)
+      // Étape 2 : Afficher les statistiques avant nettoyage
+      displayPreCleaningStats(rawDf)
 
-    // Étape 5 : Écriture vers MinIO (bucket nyc-cleaned)
-    writeCleanedData(cleanedDf, cleanedPath)
+      // Étape 3 : Nettoyage des données
+      val cleanedDf = cleanData(rawDf)
 
-    // Étape 6 : Vérification
-    verifyCleanedData(cleanedPath)
+      // Étape 4 : Afficher les statistiques après nettoyage
+      displayPostCleaningStats(rawDf, cleanedDf)
+
+      // Étape 5 : Écriture vers MinIO (bucket nyc-cleaned)
+      writeCleanedData(cleanedDf, cleanedPath)
+
+      // Étape 6 : Vérification
+      verifyCleanedData(cleanedPath)
+
+      println(s"\n✓ Mois $month/$Year traité avec succès")
+    }
 
     printHeader("EXERCICE 2 - BRANCHE 1 TERMINÉ AVEC SUCCÈS !")
     println("\nLes données nettoyées sont disponibles dans MinIO :")
     println(s"  Bucket : $CleanedBucket")
-    println(s"  Fichier : $FileName")
+    println("  Fichiers :")
+    Months.foreach { month =>
+      println(s"    - yellow_tripdata_${Year}-${month}.parquet")
+    }
     println("\nProchaine étape : Exercice 3 (création des tables SQL)")
 
   } catch {

@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 
 echo "=========================================="
 echo "Exercice 3 : Création du Data Warehouse"
+echo "Période : Juin - Août 2025 (3 mois)"
 echo "=========================================="
 
 # Configuration PostgreSQL
@@ -117,6 +118,7 @@ echo ""
 echo "Résultat :"
 echo "  - Tables créées dans PostgreSQL"
 echo "  - Données de référence insérées"
+echo "  - Calendrier 2025 (dim_date) prêt pour juin-août"
 echo "  - Base de données : $PG_DB"
 echo ""
 echo "Connexion :"

@@ -9,7 +9,12 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 
 echo "=========================================="
 echo "Tests Unitaires - Exercice 2"
+echo "Nettoyage des données NYC Taxi (Juin-Août 2025)"
 echo "=========================================="
+
+# Se positionner dans le répertoire du script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 sbt test
 EXIT_CODE=$?

@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2024 CY Tech - Big Data Project
+ * Copyright (c) 2025 CY Tech - Big Data Project
  * All rights reserved.
  *
  * Tests unitaires pour l'exercice 2 - Branche 2 : Ingestion vers PostgreSQL
+ * Période : Juin-Août 2025
  */
 
 package fr.cytech.ingestion
@@ -20,8 +21,10 @@ import org.apache.spark.sql.types._
  *   - Le calcul des clés de dimension (date_id, time_id)
  *   - La transformation des colonnes
  *   - La validité des données transformées
+ *   - Le traitement de plusieurs mois (Juin-Août 2025)
  *
  * @author Équipe Big Data CY Tech
+ * @version 1.1.0
  */
 class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
 
@@ -48,14 +51,14 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
   // ===========================================================================
 
   test("calculateDateId - format YYYYMMDD correct") {
-    assert(DataTransformer.calculateDateId(2024, 1, 15) === 20240115)
-    assert(DataTransformer.calculateDateId(2024, 12, 31) === 20241231)
-    assert(DataTransformer.calculateDateId(2024, 1, 1) === 20240101)
+    assert(DataTransformer.calculateDateId(2025, 1, 15) === 20250115)
+    assert(DataTransformer.calculateDateId(2025, 12, 31) === 20251231)
+    assert(DataTransformer.calculateDateId(2025, 1, 1) === 20250101)
   }
 
   test("calculateDateId - mois à un chiffre avec padding") {
-    assert(DataTransformer.calculateDateId(2024, 1, 5) === 20240105)
-    assert(DataTransformer.calculateDateId(2024, 9, 9) === 20240909)
+    assert(DataTransformer.calculateDateId(2025, 1, 5) === 20250105)
+    assert(DataTransformer.calculateDateId(2025, 9, 9) === 20250909)
   }
 
   // ===========================================================================
@@ -86,16 +89,16 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
   // ===========================================================================
 
   test("isValidDateId - dates valides") {
-    assert(DataTransformer.isValidDateId(20240115) === true)
-    assert(DataTransformer.isValidDateId(20240101) === true)
-    assert(DataTransformer.isValidDateId(20241231) === true)
+    assert(DataTransformer.isValidDateId(20250115) === true)
+    assert(DataTransformer.isValidDateId(20250101) === true)
+    assert(DataTransformer.isValidDateId(20251231) === true)
   }
 
   test("isValidDateId - dates invalides") {
-    assert(DataTransformer.isValidDateId(20241301) === false) // mois > 12
-    assert(DataTransformer.isValidDateId(20240132) === false) // jour > 31
-    assert(DataTransformer.isValidDateId(20240100) === false) // jour = 0
-    assert(DataTransformer.isValidDateId(20240001) === false) // mois = 0
+    assert(DataTransformer.isValidDateId(20251301) === false) // mois > 12
+    assert(DataTransformer.isValidDateId(20250132) === false) // jour > 31
+    assert(DataTransformer.isValidDateId(20250100) === false) // jour = 0
+    assert(DataTransformer.isValidDateId(20250001) === false) // mois = 0
     assert(DataTransformer.isValidDateId(19990115) === false) // année < 2020
   }
 
@@ -128,9 +131,9 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
     import sqlContext.implicits._
 
     val testData = Seq(
-      ("2024-01-15 08:30:00"),
-      ("2024-12-31 23:59:00"),
-      ("2024-01-01 00:00:00")
+      ("2025-01-15 08:30:00"),
+      ("2025-12-31 23:59:00"),
+      ("2025-01-01 00:00:00")
     ).toDF("pickup_datetime")
       .withColumn("pickup_datetime", to_timestamp(col("pickup_datetime")))
 
@@ -140,9 +143,9 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
         dayofmonth(col("pickup_datetime"))).cast(IntegerType))
 
     val dateIds = result.select("date_id").collect().map(_.getInt(0))
-    assert(dateIds.contains(20240115))
-    assert(dateIds.contains(20241231))
-    assert(dateIds.contains(20240101))
+    assert(dateIds.contains(20250115))
+    assert(dateIds.contains(20251231))
+    assert(dateIds.contains(20250101))
   }
 
   test("transformation - calcul time_id avec arrondi 30 minutes") {
@@ -150,11 +153,11 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
     import sqlContext.implicits._
 
     val testData = Seq(
-      ("2024-01-15 08:15:00", 800),
-      ("2024-01-15 08:45:00", 830),
-      ("2024-01-15 12:00:00", 1200),
-      ("2024-01-15 12:30:00", 1230),
-      ("2024-01-15 23:59:00", 2330)
+      ("2025-01-15 08:15:00", 800),
+      ("2025-01-15 08:45:00", 830),
+      ("2025-01-15 12:00:00", 1200),
+      ("2025-01-15 12:30:00", 1230),
+      ("2025-01-15 23:59:00", 2330)
     ).toDF("pickup_datetime", "expected_time_id")
       .withColumn("pickup_datetime", to_timestamp(col("pickup_datetime")))
 
@@ -178,7 +181,7 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
     import sqlContext.implicits._
 
     val testData = Seq(
-      (1, "2024-01-15 08:30:00", "2024-01-15 09:00:00", 2, 5.5, 1, 1,
+      (1, "2025-01-15 08:30:00", "2025-01-15 09:00:00", 2, 5.5, 1, 1,
         100, 200, 15.0, 1.0, 0.5, 3.0, 0.0, 1.0, 2.5, 0.0, 23.0, "N")
     ).toDF(
       "VendorID", "tpep_pickup_datetime", "tpep_dropoff_datetime",
@@ -236,6 +239,40 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   // ===========================================================================
+  // TESTS : TRAITEMENT MULTI-MOIS (Juin-Août 2025)
+  // ===========================================================================
+
+  test("multi-mois - liste des mois à traiter") {
+    val year = "2025"
+    val months = List("06", "07", "08")
+
+    assert(months.length === 3)
+    assert(months.contains("06"))
+    assert(months.contains("07"))
+    assert(months.contains("08"))
+
+    val fileNames = months.map(month => s"yellow_tripdata_${year}-${month}.parquet")
+    assert(fileNames.contains("yellow_tripdata_2025-06.parquet"))
+    assert(fileNames.contains("yellow_tripdata_2025-07.parquet"))
+    assert(fileNames.contains("yellow_tripdata_2025-08.parquet"))
+  }
+
+  test("multi-mois - date_id pour juin 2025") {
+    assert(DataTransformer.calculateDateId(2025, 6, 15) === 20250615)
+    assert(DataTransformer.isValidDateId(20250615) === true)
+  }
+
+  test("multi-mois - date_id pour juillet 2025") {
+    assert(DataTransformer.calculateDateId(2025, 7, 20) === 20250720)
+    assert(DataTransformer.isValidDateId(20250720) === true)
+  }
+
+  test("multi-mois - date_id pour août 2025") {
+    assert(DataTransformer.calculateDateId(2025, 8, 10) === 20250810)
+    assert(DataTransformer.isValidDateId(20250810) === true)
+  }
+
+  // ===========================================================================
   // TESTS : CAS LIMITES
   // ===========================================================================
 
@@ -250,12 +287,12 @@ class MainSpec extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("cas limite - premier janvier") {
-    assert(DataTransformer.calculateDateId(2024, 1, 1) === 20240101)
-    assert(DataTransformer.isValidDateId(20240101) === true)
+    assert(DataTransformer.calculateDateId(2025, 1, 1) === 20250101)
+    assert(DataTransformer.isValidDateId(20250101) === true)
   }
 
   test("cas limite - 31 décembre") {
-    assert(DataTransformer.calculateDateId(2024, 12, 31) === 20241231)
-    assert(DataTransformer.isValidDateId(20241231) === true)
+    assert(DataTransformer.calculateDateId(2025, 12, 31) === 20251231)
+    assert(DataTransformer.isValidDateId(20251231) === true)
   }
 }

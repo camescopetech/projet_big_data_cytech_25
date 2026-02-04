@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Créer un modèle de données multi-dimensionnel (snowflake schema) pour le Data Warehouse NYC Taxi, optimisé pour l'analyse OLAP.
+Créer un modèle de données multi-dimensionnel (snowflake schema) pour le Data Warehouse NYC Taxi, optimisé pour l'analyse OLAP des données de **Juin-Août 2025** (3 mois).
 
 ## Architecture du Data Warehouse
 
@@ -60,7 +60,7 @@ Créer un modèle de données multi-dimensionnel (snowflake schema) pour le Data
 | `dim_rate_code` | Codes tarifaires | 6 |
 | `dim_payment_type` | Types de paiement | 6 |
 | `dim_location` | Zones de taxi | ~265 |
-| `dim_date` | Calendrier | 366 (année 2024) |
+| `dim_date` | Calendrier | 365 (année 2025) |
 | `dim_time` | Créneaux horaires | 48 (30 min) |
 
 ### Dimensions de Niveau 2 (Flocon)
@@ -162,6 +162,7 @@ ORDER BY nb_courses DESC;
 ```
 ==========================================
 Exercice 3 : Création du Data Warehouse
+Période : Juin - Août 2025 (3 mois)
 ==========================================
 
 [1/5] Vérification de Docker...
@@ -182,7 +183,7 @@ Tables créées :
     table_name     | row_count
 -------------------+-----------
  dim_borough       |         7
- dim_date          |       366
+ dim_date          |       365
  dim_location      |       178
  dim_payment_type  |         6
  dim_rate_code     |         6
@@ -193,6 +194,9 @@ Tables créées :
 ==========================================
 ✓ EXERCICE 3 TERMINÉ !
 ==========================================
+
+Note: dim_date contient le calendrier 2025 complet,
+prêt pour les données de juin-août 2025.
 ```
 
 ## Prochaines Étapes
