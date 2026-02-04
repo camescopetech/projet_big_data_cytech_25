@@ -2,6 +2,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*.env
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -51,3 +52,9 @@ minio-data
 
 ### Hadoop ###
 hadoop
+
+### Python ###
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

@@ -1,0 +1,23 @@
+# Exercice 4 : Dashboard de visualisation
+# Dependencies for Streamlit dashboard
+
+# Web framework
+streamlit>=1.28.0
+
+# Data manipulation
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Database connection
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Visualization
+plotly>=5.18.0
+
+# Optional: Jupyter notebook support
+jupyter>=1.0.0
+ipykernel>=6.0.0
