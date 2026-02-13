@@ -464,6 +464,150 @@ L'intégration d'Airflow permet de passer d'une exécution manuelle des exercice
 
 ---
 
+## Guide d'exécution
+
+### Prérequis généraux
+
+| Outil | Version | Exercices concernés |
+|-------|---------|---------------------|
+| Docker Desktop | - | Tous |
+| Java | 17 (LTS) | Ex. 1, 2 |
+| SBT | - | Ex. 1, 2 |
+| Python | 3.8+ | Ex. 4, 5 |
+| uv | - | Ex. 5 |
+
+### Démarrage de l'infrastructure
+
+Avant tout exercice, démarrer les services Docker (Spark, MinIO, PostgreSQL) :
+
+```bash
+docker compose up -d
+```
+
+Les interfaces sont alors accessibles :
+- **MinIO Console** : http://localhost:9001 (minio / minio123)
+- **Spark Master UI** : http://localhost:8081
+- **PostgreSQL** : localhost:5432 (datawarehouse / datawarehouse123)
+
+### Exercice 1 : Collecte des données
+
+```bash
+cd ex01_data_retrieval
+./run_ex01.sh
+```
+
+Le script vérifie les prérequis (Docker, MinIO, SBT, Java 17), crée le répertoire `data/raw/`, compile le projet Scala avec SBT puis exécute le programme Spark qui télécharge les 3 fichiers Parquet et les uploade vers MinIO (bucket `nyc-raw`).
+
+### Exercice 2 : Nettoyage et ingestion
+
+**Branche 1 — Nettoyage** (données brutes → données nettoyées dans MinIO) :
+
+```bash
+cd ex02_data_cleaning
+./run_ex02.sh
+```
+
+Le script vérifie que MinIO est actif et que le bucket `nyc-raw` contient les données de l'exercice 1, crée le bucket `nyc-cleaned` si nécessaire, puis lance le programme Spark qui applique les 11 règles de validation et écrit les données nettoyées.
+
+**Branche 2 — Ingestion** (données nettoyées → PostgreSQL) :
+
+```bash
+cd ex02_data_ingestion
+./run_ex02_branch2.sh
+```
+
+Le script vérifie que MinIO, PostgreSQL et les tables de l'exercice 3 sont prêts, puis lance le programme Spark qui transforme les données et les insère dans la table `fact_trips` par lots de 10 000 lignes.
+
+**Important** : L'exercice 3 doit être exécuté avant la branche 2 de l'exercice 2.
+
+### Exercice 3 : Création du Data Warehouse
+
+```bash
+cd ex03_sql_table_creation
+./run_ex03.sh
+```
+
+Le script démarre PostgreSQL si nécessaire, exécute le fichier `creation.sql` (création des 8 tables du modèle en flocon), puis le fichier `insertion.sql` (insertion des données de référence : vendors, codes tarifaires, types de paiement, zones, arrondissements, calendrier 2025, créneaux horaires). Un comptage final vérifie l'intégrité des insertions.
+
+### Exercice 4 : Dashboard de visualisation
+
+```bash
+cd ex04_dashboard
+./run_ex04.sh
+```
+
+Le script vérifie Python et PostgreSQL, crée un environnement virtuel, installe les dépendances (`requirements.txt`), puis lance l'application Streamlit accessible sur http://localhost:8501.
+
+Appuyer sur `Ctrl+C` pour arrêter le serveur.
+
+### Exercice 5 : Service de prédiction ML
+
+```bash
+cd ex05_ml_prediction_service
+
+# Pipeline complet : entraînement + application de démonstration
+./run_ex05.sh
+
+# Entraînement du modèle uniquement
+./run_ex05.sh --train-only
+
+# Application Streamlit uniquement (nécessite un modèle entraîné)
+./run_ex05.sh --app-only
+
+# Exécution des tests unitaires et vérification PEP 8
+./run_ex05.sh --test
+```
+
+Le script installe les dépendances avec `uv`, vérifie la présence des fichiers Parquet dans `ex01_data_retrieval/data/raw/`, entraîne le modèle Gradient Boosting Regressor, le sauvegarde dans `models/latest_model.joblib`, puis lance l'application Streamlit de démonstration accessible sur http://localhost:8502.
+
+### Exercice 6 : Orchestration avec Airflow
+
+```bash
+cd ex06_airflow
+
+# Première utilisation : initialisation complète
+./run_ex06.sh init
+
+# Commandes disponibles :
+./run_ex06.sh start     # Démarre Airflow + services de base
+./run_ex06.sh stop      # Arrête tous les services
+./run_ex06.sh restart   # Redémarre tous les services
+./run_ex06.sh status    # Affiche le statut des services
+./run_ex06.sh logs      # Affiche les logs Airflow
+```
+
+L'interface web Airflow est accessible sur http://localhost:8080 (identifiants : admin / admin). Le DAG `nyc_taxi_bigdata_pipeline` orchestre l'ensemble des exercices avec une planification mensuelle.
+
+### Ordre d'exécution recommandé
+
+```bash
+# 1. Démarrer l'infrastructure
+docker compose up -d
+
+# 2. Collecte des données
+cd ex01_data_retrieval && ./run_ex01.sh && cd ..
+
+# 3. Nettoyage des données
+cd ex02_data_cleaning && ./run_ex02.sh && cd ..
+
+# 4. Création du Data Warehouse
+cd ex03_sql_table_creation && ./run_ex03.sh && cd ..
+
+# 5. Ingestion dans PostgreSQL
+cd ex02_data_ingestion && ./run_ex02_branch2.sh && cd ..
+
+# 6. Dashboard de visualisation
+cd ex04_dashboard && ./run_ex04.sh && cd ..
+
+# 7. Service de prédiction ML
+cd ex05_ml_prediction_service && ./run_ex05.sh && cd ..
+
+# 8. Orchestration Airflow
+cd ex06_airflow && ./run_ex06.sh init
+```
+
+---
+
 ## Conclusion générale
 
 Ce projet Big Data illustre la mise en œuvre d'un **pipeline de données complet et fonctionnel**, depuis la collecte de données brutes jusqu'à leur exploitation par un modèle de Machine Learning, en passant par le nettoyage, la modélisation, la visualisation et l'orchestration.
