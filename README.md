@@ -1,5 +1,7 @@
 Code du projet de Big Data par Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio en ING3 IA A.
 
+Le rapport se trouve dans le ficher Rapport.md à la racine du projet.
+
 ------
 Le code minimal pour faire fonctionner un code avec Minio :
 ```scala
