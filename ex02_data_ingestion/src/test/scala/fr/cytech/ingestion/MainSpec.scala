@@ -23,7 +23,7 @@ import org.apache.spark.sql.types._
  *   - La validité des données transformées
  *   - Le traitement de plusieurs mois (Juin-Août 2025)
  *
- * @author Équipe Big Data CY Tech
+ * @author Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
  * @version 1.1.0
  */
 class MainSpec extends AnyFunSuite with BeforeAndAfterAll {

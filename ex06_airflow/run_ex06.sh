@@ -14,7 +14,7 @@
 #   - Docker et Docker Compose installes
 #   - Les services de base (MinIO, PostgreSQL) doivent etre demarres
 #
-# Auteur: Equipe Big Data CY Tech
+# Auteur: Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
 # Version: 1.0.0
 # =============================================================================
 

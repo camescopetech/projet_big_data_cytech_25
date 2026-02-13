@@ -15,7 +15,7 @@
 #   - PostgreSQL en cours d'execution (docker compose up -d postgres)
 #   - Exercices 1, 2, 3 termines (donnees dans PostgreSQL)
 #
-# Auteur: Equipe Big Data CY Tech
+# Auteur: Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
 # Version: 1.0.0
 # =============================================================================
 

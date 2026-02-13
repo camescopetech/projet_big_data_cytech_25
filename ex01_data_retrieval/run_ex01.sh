@@ -17,7 +17,7 @@
 #   - SBT (Scala Build Tool) installé
 #   - Java 8, 11 ou 17 installé
 #
-# Auteur: Équipe Big Data CY Tech
+# Auteur: Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
 # Version: 1.0.0
 # =============================================================================
 

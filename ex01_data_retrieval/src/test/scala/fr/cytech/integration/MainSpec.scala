@@ -40,9 +40,8 @@ import scala.util.{Failure, Success, Try}
  * @note Les tests nécessitent un environnement Spark local
  * @note MinIO n'est pas requis pour les tests unitaires (mock local)
  *
- * @author Équipe Big Data CY Tech
+ * @author Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
  * @version 1.1.0
- * @since 2025-01
  */
 class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {
 

@@ -28,7 +28,7 @@ import org.apache.spark.sql.types._
  * @note Prérequis : Exercice 2 Branche 1 et Exercice 3 doivent être terminés
  * @see [[https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page NYC TLC Data Dictionary]]
  *
- * @author Équipe Big Data CY Tech
+ * @author Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
  * @version 1.1.0
  * @since 2025-01
  */

@@ -1,3 +1,6 @@
+Code du projet de Big Data par Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio en ING3 IA A.
+
+------
 Le code minimal pour faire fonctionner un code avec Minio :
 ```scala
 import org.apache.spark.sql.{SparkSession, DataFrame}

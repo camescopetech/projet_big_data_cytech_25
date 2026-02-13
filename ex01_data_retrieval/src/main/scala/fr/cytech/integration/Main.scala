@@ -27,7 +27,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Application principale pour la collecte et le stockage des données NYC Taxi.
  *
- * Cette application réalise l'exercice 1 du projet Big Data :
+ * Cette application réalise l'exercice 1 :
  *   - Téléchargement des données Parquet depuis le portail NYC Open Data
  *   - Stockage local dans le répertoire `data/raw/`
  *   - Upload vers le Data Lake MinIO (bucket `nyc-raw`)
@@ -35,12 +35,8 @@ import scala.util.{Failure, Success, Try}
  * @note Nécessite Java 8, 11 ou 17 (incompatible avec Java 21+)
  * @note MinIO doit être démarré via `docker-compose up -d`
  *
- * @see [[https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page NYC TLC Trip Record Data]]
- * @see [[https://min.io/ MinIO Documentation]]
- *
- * @author Équipe Big Data CY Tech
+ * @author Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
  * @version 1.0.0
- * @since 2024-01
  */
 object Main extends App {
 

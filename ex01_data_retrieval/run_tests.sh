@@ -12,7 +12,7 @@
 #   ./run_tests.sh --verbose    # Mode verbose avec détails
 #   ./run_tests.sh --watch      # Mode watch (relance à chaque modification)
 #
-# Auteur: Équipe Big Data CY Tech
+# Auteur: Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
 # Version: 1.0.0
 # =============================================================================
 

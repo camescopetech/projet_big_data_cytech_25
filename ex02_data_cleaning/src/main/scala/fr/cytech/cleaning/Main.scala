@@ -26,12 +26,10 @@ import org.apache.spark.sql.types._
  *   - Nettoyage et filtrage des données invalides
  *   - Écriture des données nettoyées vers MinIO (nyc-cleaned)
  *
- * @note Les données nettoyées seront utilisées par l'exercice 5 (ML)
  * @see [[https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page NYC TLC Data Dictionary]]
  *
- * @author Équipe Big Data CY Tech
+ * @author Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
  * @version 1.1.0
- * @since 2025-01
  */
 object Main extends App {
 

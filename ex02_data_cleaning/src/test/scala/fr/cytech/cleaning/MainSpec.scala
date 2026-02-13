@@ -27,7 +27,7 @@ import java.sql.Timestamp
  *   - Filtrage des durées aberrantes
  *   - Traitement de plusieurs mois (Juin-Août 2025)
  *
- * @author Équipe Big Data CY Tech
+ * @author Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
  * @version 1.1.0
  */
 class MainSpec extends AnyFunSuite with Matchers with BeforeAndAfterAll {

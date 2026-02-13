@@ -23,7 +23,7 @@
 #   L'utilisation de Python natif est strictement interdite.
 #   Vous devez utiliser les environnements virtuels geres par uv.
 #
-# Auteur: Equipe Big Data CY Tech
+# Auteur: Camille Bezet, Brasa Franklin, Kenmogne Loic, Martin Soares Flavio
 # Version: 1.0.0
 # =============================================================================
 
