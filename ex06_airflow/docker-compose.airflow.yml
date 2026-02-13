@@ -1,0 +1,249 @@
+# =============================================================================
+# Docker Compose - Airflow pour l'orchestration du projet Big Data NYC Taxi
+# =============================================================================
+#
+# Ce fichier definit les services Airflow pour automatiser l'ensemble
+# des exercices du projet Big Data.
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f ex06_airflow/docker-compose.airflow.yml up -d
+#
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL pour Airflow (metadata database)
+  # ---------------------------------------------------------------------------
+  airflow-postgres:
+    image: postgres:15-alpine
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    networks:
+      - spark-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis (Celery broker pour Airflow)
+  # ---------------------------------------------------------------------------
+  airflow-redis:
+    image: redis:7-alpine
+    container_name: airflow-redis
+    networks:
+      - spark-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Airflow Webserver
+  # ---------------------------------------------------------------------------
+  airflow-webserver:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: airflow-webserver
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      airflow-redis:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      # Variables pour les connexions aux services
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: datawarehouse
+      POSTGRES_PASSWORD: datawarehouse123
+      POSTGRES_DB: nyc_taxi_dw
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+      - ./scripts:/opt/airflow/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Monter les repertoires des exercices
+      - ../ex01_data_retrieval:/opt/airflow/exercises/ex01_data_retrieval:ro
+      - ../ex02_data_cleaning:/opt/airflow/exercises/ex02_data_cleaning:ro
+      - ../ex02_data_ingestion:/opt/airflow/exercises/ex02_data_ingestion:ro
+      - ../ex03_sql_table_creation:/opt/airflow/exercises/ex03_sql_table_creation:ro
+      - ../ex04_dashboard:/opt/airflow/exercises/ex04_dashboard:ro
+      - ../ex05_ml_prediction_service:/opt/airflow/exercises/ex05_ml_prediction_service:ro
+    ports:
+      - "8080:8080"
+    command: webserver
+    networks:
+      - spark-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Airflow Scheduler
+  # ---------------------------------------------------------------------------
+  airflow-scheduler:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: airflow-scheduler
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      airflow-redis:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: datawarehouse
+      POSTGRES_PASSWORD: datawarehouse123
+      POSTGRES_DB: nyc_taxi_dw
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+      - ./scripts:/opt/airflow/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../ex01_data_retrieval:/opt/airflow/exercises/ex01_data_retrieval:ro
+      - ../ex02_data_cleaning:/opt/airflow/exercises/ex02_data_cleaning:ro
+      - ../ex02_data_ingestion:/opt/airflow/exercises/ex02_data_ingestion:ro
+      - ../ex03_sql_table_creation:/opt/airflow/exercises/ex03_sql_table_creation:ro
+      - ../ex04_dashboard:/opt/airflow/exercises/ex04_dashboard:ro
+      - ../ex05_ml_prediction_service:/opt/airflow/exercises/ex05_ml_prediction_service:ro
+    command: scheduler
+    networks:
+      - spark-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Airflow Worker (Celery)
+  # ---------------------------------------------------------------------------
+  airflow-worker:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: airflow-worker
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      airflow-redis:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: datawarehouse
+      POSTGRES_PASSWORD: datawarehouse123
+      POSTGRES_DB: nyc_taxi_dw
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+      - ./scripts:/opt/airflow/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../ex01_data_retrieval:/opt/airflow/exercises/ex01_data_retrieval:ro
+      - ../ex02_data_cleaning:/opt/airflow/exercises/ex02_data_cleaning:ro
+      - ../ex02_data_ingestion:/opt/airflow/exercises/ex02_data_ingestion:ro
+      - ../ex03_sql_table_creation:/opt/airflow/exercises/ex03_sql_table_creation:ro
+      - ../ex04_dashboard:/opt/airflow/exercises/ex04_dashboard:ro
+      - ../ex05_ml_prediction_service:/opt/airflow/exercises/ex05_ml_prediction_service:ro
+    command: celery worker
+    networks:
+      - spark-network
+    healthcheck:
+      test: ["CMD-SHELL", "celery --app airflow.executors.celery_executor.app inspect ping -d \"celery@$${HOSTNAME}\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Airflow Init (initialisation de la base et creation de l'admin)
+  # ---------------------------------------------------------------------------
+  airflow-init:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: airflow-init
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      airflow-redis:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
+        chown -R airflow:root /opt/airflow/{logs,dags,plugins}
+        exec /entrypoint airflow version
+    networks:
+      - spark-network
+
+volumes:
+  airflow_postgres_data:
+
+networks:
+  spark-network:
+    name: spark-network
+    external: true

@@ -6,7 +6,7 @@ de New York stockées dans PostgreSQL (Data Warehouse).
 
 Periode : Juin - Aout 2025 (3 mois)
 
-Author: Equipe Big Data CY Tech
+Author: Camille Bezet, Brasa Franklin, Kenmogne Loïc, Martin Soares Flavio (ING3 IA A)
 Version: 1.1.0
 """
 

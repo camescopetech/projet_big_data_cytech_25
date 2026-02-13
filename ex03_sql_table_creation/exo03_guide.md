@@ -20,8 +20,7 @@ Créer un modèle de données multi-dimensionnel (snowflake schema) pour le Data
        │    │                    │                    │   │
        ▼    ▼                    ▼                    ▼   ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                         fact_trips                                │
-│  (Table de faits - Grain: 1 course de taxi)                      │
+│                         fact_trips                               │
 │                                                                   │
 │  Mesures: fare_amount, tip_amount, total_amount,                 │
 │           trip_distance, trip_duration_minutes, passenger_count  │

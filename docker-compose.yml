@@ -105,4 +105,5 @@ volumes:
 
 networks:
   spark-network:
+    name: spark-network
     driver: bridge

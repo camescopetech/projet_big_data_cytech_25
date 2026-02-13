@@ -1,8 +1,8 @@
-# Exercice 4 : Visualisation des Donnees NYC Taxi
+# Exercice 4 : Visualisation des Données NYC Taxi
 
 ## Objectif
 
-Creer un tableau de bord interactif pour visualiser les donnees des taxis jaunes de New York (Juin-Aout 2025) stockees dans PostgreSQL.
+Créer un tableau de bord interactif pour visualiser les données des taxis jaunes de New York (Juin-Août 2025) stockées dans PostgreSQL.
 
 ## Architecture
 
@@ -21,11 +21,11 @@ Creer un tableau de bord interactif pour visualiser les donnees des taxis jaunes
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
 │  │ Vue         │  │ Analyse     │  │ Analyse             │  │
-│  │ d'ensemble  │  │ temporelle  │  │ geographique        │  │
+│  │ d'ensemble  │  │ temporelle  │  │ géographique        │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 │                                                              │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │              Analyse financiere                      │    │
+│  │              Analyse financière                      │    │
 │  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
                           │
@@ -34,26 +34,26 @@ Creer un tableau de bord interactif pour visualiser les donnees des taxis jaunes
                   http://localhost:8501
 ```
 
-## Prerequis
+## Prérequis
 
-1. **Exercices 1, 2, 3 termines** : Donnees dans PostgreSQL
-2. **Docker** en cours d'execution avec PostgreSQL
-3. **Python 3.8+** installe
+1. **Exercices 1, 2, 3 terminés** : Données dans PostgreSQL
+2. **Docker** en cours d'exécution avec PostgreSQL
+3. **Python 3.8+** installé
 
 ## Structure du Projet
 
 ```
 ex04_dashboard/
 ├── app.py               # Application Streamlit principale
-├── requirements.txt     # Dependances Python
-├── run_ex04.sh          # Script d'execution
+├── requirements.txt     # Dépendances Python
+├── run_ex04.sh          # Script d'exécution
 ├── ex04-guide.md        # Ce guide
-└── venv/                # Environnement virtuel (cree automatiquement)
+└── venv/                # Environnement virtuel (créé automatiquement)
 ```
 
-## Installation et Execution
+## Installation et Exécution
 
-### Methode 1 : Script automatique (recommande)
+### Méthode 1 : Script automatique (recommandé)
 
 ```bash
 cd ex04_dashboard
@@ -62,60 +62,60 @@ chmod +x run_ex04.sh
 ```
 
 Le script va :
-1. Verifier Python et Docker
-2. Verifier PostgreSQL (le demarre si necessaire)
-3. Creer un environnement virtuel
-4. Installer les dependances
+1. Vérifier Python et Docker
+2. Vérifier PostgreSQL (le démarre si nécessaire)
+3. Créer un environnement virtuel
+4. Installer les dépendances
 5. Lancer le dashboard
 
-### Methode 2 : Execution manuelle
+### Méthode 2 : Exécution manuelle
 
 ```bash
 cd ex04_dashboard
 
-# Creer l'environnement virtuel
+# Créer l'environnement virtuel
 python3 -m venv venv
 source venv/bin/activate
 
-# Installer les dependances
+# Installer les dépendances
 pip install -r requirements.txt
 
 # Lancer Streamlit
 streamlit run app.py
 ```
 
-## Fonctionnalites du Dashboard
+## Fonctionnalités du Dashboard
 
 ### 1. Vue d'ensemble
 
-- **KPIs principaux** : Total courses, revenu total, distance moyenne, duree moyenne
+- **KPIs principaux** : Total courses, revenu total, distance moyenne, durée moyenne
 - **Graphique** : Courses par jour de la semaine
-- **Graphique** : Repartition par type de paiement (camembert)
-- **Graphique** : Repartition par fournisseur (CMT vs VeriFone)
+- **Graphique** : Répartition par type de paiement (camembert)
+- **Graphique** : Répartition par fournisseur (CMT vs VeriFone)
 
 ### 2. Analyse Temporelle
 
-- **Evolution quotidienne** des courses
-- **Distribution horaire** des courses (par periode de la journee)
+- **Évolution quotidienne** des courses
+- **Distribution horaire** des courses (par période de la journée)
 - **Heures de pointe vs heures creuses**
 - **Weekend vs semaine** (comparaison)
 
-### 3. Analyse Geographique
+### 3. Analyse Géographique
 
 - **Courses par arrondissement** (Manhattan, Brooklyn, Queens, etc.)
 - **Treemap** des arrondissements
 - **Tableau** avec distance et montant moyen par zone
 
-### 4. Analyse Financiere
+### 4. Analyse Financière
 
 - **Revenus totaux** et moyens
-- **Evolution des revenus quotidiens**
+- **Évolution des revenus quotidiens**
 - **Revenus par type de paiement**
 - **Analyse des pourboires**
 
-## Connexion a PostgreSQL
+## Connexion à PostgreSQL
 
-Le dashboard se connecte automatiquement a PostgreSQL avec ces parametres :
+Le dashboard se connecte automatiquement à PostgreSQL avec ces paramètres :
 
 ```
 Host: localhost
@@ -125,7 +125,7 @@ User: datawarehouse
 Password: datawarehouse123
 ```
 
-## Requetes SQL Utilisees
+## Requêtes SQL Utilisées
 
 ### Exemple : Courses par jour de la semaine
 
@@ -154,45 +154,45 @@ GROUP BY t.hour, t.period_of_day
 ORDER BY t.hour;
 ```
 
-## Captures d'ecran
+## Captures d'écran
 
-Le dashboard genere automatiquement des visualisations interactives :
+Le dashboard génère automatiquement des visualisations interactives :
 
 1. **Graphiques en barres** pour les comparaisons
-2. **Camemberts** pour les repartitions
-3. **Graphiques en lignes** pour les evolutions temporelles
-4. **Treemaps** pour les analyses hierarchiques
+2. **Camemberts** pour les répartitions
+3. **Graphiques en lignes** pour les évolutions temporelles
+4. **Treemaps** pour les analyses hiérarchiques
 5. **Tableaux interactifs** avec tri et filtrage
 
-## Technologies Utilisees
+## Technologies Utilisées
 
 | Technologie | Usage |
 |-------------|-------|
 | Streamlit | Framework web Python |
 | Plotly | Graphiques interactifs |
-| Pandas | Manipulation de donnees |
+| Pandas | Manipulation de données |
 | SQLAlchemy | Connexion PostgreSQL |
 | psycopg2 | Driver PostgreSQL |
 
-## Resultat Attendu
+## Résultat Attendu
 
 ```
 ==========================================
 Exercice 4 : Dashboard NYC Taxi
-Periode : Juin - Aout 2025 (3 mois)
+Période : Juin - Août 2025 (3 mois)
 ==========================================
 
-[1/5] Verification de Python...
+[1/5] Vérification de Python...
 ✓ Python 3.11.x
 
-[2/5] Verification de Docker...
+[2/5] Vérification de Docker...
 ✓ Docker est actif
 
-[3/5] Verification de PostgreSQL...
+[3/5] Vérification de PostgreSQL...
 ✓ PostgreSQL est actif
 
-[4/5] Installation des dependances...
-✓ Dependances installees
+[4/5] Installation des dépendances...
+✓ Dépendances installées
 
 [5/5] Lancement du dashboard Streamlit...
 ==========================================
@@ -201,7 +201,7 @@ Le dashboard va s'ouvrir dans votre navigateur.
 
 URL : http://localhost:8501
 
-Appuyez sur Ctrl+C pour arreter le serveur.
+Appuyez sur Ctrl+C pour arrêter le serveur.
 ==========================================
 
   You can now view your Streamlit app in your browser.
@@ -210,7 +210,7 @@ Appuyez sur Ctrl+C pour arreter le serveur.
   Network URL: http://192.168.x.x:8501
 ```
 
-## Problemes Courants
+## Problèmes Courants
 
 ### Erreur : "Connection refused" (PostgreSQL)
 
@@ -221,35 +221,18 @@ docker compose up -d postgres
 
 ### Erreur : "No data available"
 
-**Solution** : Verifiez que les exercices 1, 2 et 3 ont ete executes :
+**Solution** : Vérifiez que les exercices 1, 2 et 3 ont été exécutés :
 ```bash
 docker exec postgres psql -U datawarehouse -d nyc_taxi_dw -c "SELECT COUNT(*) FROM fact_trips;"
 ```
 
 ### Erreur : "Module not found"
 
-**Solution** : Reinstallez les dependances :
+**Solution** : Réinstallez les dépendances :
 ```bash
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+## Prochaines Étapes
 
-## Alternative : Notebook Jupyter
-
-Si vous preferez utiliser un notebook pour l'EDA, vous pouvez :
-
-1. Installer Jupyter :
-```bash
-pip install jupyter
-```
-
-2. Lancer Jupyter :
-```bash
-jupyter notebook
-```
-
-3. Creer un notebook dans le dossier `notebooks/` a la racine du projet.
-
-## Prochaines Etapes
-
-1. **Exercice 5** : Machine Learning pour predire le prix des courses
+1. **Exercice 5** : Machine Learning pour prédire le prix des courses
